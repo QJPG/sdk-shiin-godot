@@ -5,17 +5,23 @@ using System.Threading.Tasks;
 [GlobalClass]
 public partial class Scene : Node
 {
-    public static Scene GetCustom()
+    public virtual async Task SceneError(Scripting scripting, params Variant[] args)
     {
-        SceneTree tree = ((SceneTree)Engine.Singleton.GetMainLoop());
-
-        //for (int i = 0; i < tree.Root.GetChildCount(); i++) GD.Print(tree.Root.GetNodeOrNull(i));
-
-        return tree != null ? tree.Root.GetNodeOrNull<Scene>("Scene1") : null;
+        // Override
     }
 
-    public virtual async Task SceneError(Scripting script, params Variant[] args)
+    public virtual async Task SceneMenu(Scripting scripting, params Variant[] args)
     {
-        GD.Print("Error Scene: ", args);
+        // Override
+    }
+
+    public virtual async Task SceneEnd(Scripting scripting, params Variant[] args)
+    {
+        // Override
+    }
+
+    public virtual async Task SceneStart(Scripting scripting, params Variant[] args)
+    {
+        // Override
     }
 }

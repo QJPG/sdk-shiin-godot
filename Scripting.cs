@@ -20,6 +20,37 @@ using System.Threading.Tasks;
 [GlobalClass]
 public partial class Scripting : Node
 {
+    public static string CustomSceneNode = "Scene1";
+
+    public static string CustomScriptingNode = "Scripting1";
+
+    public static string CustomGuiNode = "Gui1";
+
+    public static string CustomOptionsNode = "Options1";
+
+    public static Options CustomOptions()
+    {
+        SceneTree tree = ((SceneTree)Engine.Singleton.GetMainLoop());
+        return tree != null ? tree.Root.GetNodeOrNull<Options>(CustomOptionsNode) : null;
+    }
+
+    public static Gui CustomGui()
+    {
+        SceneTree tree = ((SceneTree)Engine.Singleton.GetMainLoop());
+        return tree != null ? tree.Root.GetNodeOrNull<Gui>(CustomGuiNode) : null;
+    }
+
+    public static Scene CustomScene()
+    {
+        SceneTree tree = ((SceneTree)Engine.Singleton.GetMainLoop());
+        return tree != null ? tree.Root.GetNodeOrNull<Scene>(CustomSceneNode) : null;
+    }
+
+    public static Scripting CustomScripting()
+    {
+        SceneTree tree = ((SceneTree)Engine.Singleton.GetMainLoop());
+        return tree != null ? tree.Root.GetNodeOrNull<Scripting>(CustomScriptingNode) : null;
+    }
 
     private Dictionary<string, Variant> Definitions;
 
@@ -29,14 +60,26 @@ public partial class Scripting : Node
     public Scripting()
     {
         Definitions = new Dictionary<string, Variant>();
+
+        Ready += async () =>
+        {
+            await Call("SceneStart");
+            await End();
+        };
     }
 
-    public override void _Input(InputEvent @event)
+    public override async void _Input(InputEvent @event)
     {
         if (@event is InputEventKey key && key.Pressed)
         {
             switch (key.Keycode)
             {
+                case Key.Escape:
+                    {
+                        await Call("SceneMenu");
+                        break;
+                    }
+
                 default:
                     {
                         EmitSignal(SignalName.Response);
@@ -46,15 +89,9 @@ public partial class Scripting : Node
         }
     }
 
-    public override async void _Ready()
+    public async Task Call(string name, params Variant[] args)
     {
-        await LoadScene("MyScene"); // Test
-        End(); // Test
-    }
-
-    public async Task LoadScene(string name, params Variant[] args)
-    {
-        Scene scene = Scene.GetCustom();
+        Scene scene = CustomScene();
         MethodInfo method = null;
 
         if (scene != null)
@@ -62,7 +99,7 @@ public partial class Scripting : Node
             method = scene.GetType().GetMethod(name, BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
             if (method == null)
             {
-                if (name != "SceneError") await LoadScene("SceneError", $"Unknown custom scene method '{name}'");
+                if (name != "SceneError") await Call("SceneError", $"Unknown custom scene method '{name}'");
                 return;
             }
 
@@ -79,7 +116,7 @@ public partial class Scripting : Node
         }
         else
         {
-            GD.PrintErr("No custom scene found: Add a autoload script that inherits from the Scene class and is named “Scene1”.");
+            GD.PrintErr($"No custom scene found: Add a autoload script that inherits from the Scene class and is named “{CustomSceneNode}”.");
         }
     }
 
@@ -130,8 +167,8 @@ public partial class Scripting : Node
         await ToSignal(this, SignalName.Response);
     }
 
-    public void End()
+    public async Task End()
     {
-        GD.Print("Bye! Bye!");
+        await Call("SceneEnd"); //  Bye! Bye!
     }
 }
